@@ -13,12 +13,18 @@ import { SensorData } from "@/lib/mqtt-types";
 const Index = () => {
   const { settings } = useSettings();
   const { history, addDataPoint, clearHistory } = useSensorHistory();
-  const [controlState, setControlState] = useState({ fan: 0, motor: 0 });
+  const [controlState, setControlState] = useState({ fan: 0, motor: 0, motor_sw: false });
 
   const handleMessage = useCallback(
     (data: SensorData) => {
       addDataPoint(data);
-      setControlState({ fan: data.fan, motor: data.motor });
+      setControlState((prev) => ({
+        fan: data.fan,
+      
+        motor: data.motor_speed !== undefined ? data.motor_speed : (data.motor !== undefined ? data.motor : prev.motor),
+        
+        motor_sw: data.motor_sw !== undefined ? Boolean(data.motor_sw) : prev.motor_sw 
+      }));
     },
     [addDataPoint]
   );
@@ -28,16 +34,36 @@ const Index = () => {
     onMessage: handleMessage,
   });
 
+  const handleSafetyChange = (enabled: boolean) => {
+    // 1. Update Tampilan Web Lokal dulu
+    const newState = { ...controlState, motor_sw: enabled };
+    setControlState(newState);
+
+    publishControl({
+      fan: newState.fan,
+      motor_speed: newState.motor,
+      motor_sw: enabled
+    });
+  };
+
   const handleFanChange = (value: number) => {
     const newState = { ...controlState, fan: value };
     setControlState(newState);
-    publishControl(newState);
+    publishControl({
+      fan: value,
+      motor_speed: newState.motor,
+      motor_sw: newState.motor_sw
+    });
   };
 
   const handleMotorChange = (value: number) => {
     const newState = { ...controlState, motor: value };
     setControlState(newState);
-    publishControl(newState);
+    publishControl({
+      fan: newState.fan,
+      motor_speed: value, // Mapping ke motor_speed
+      motor_sw: newState.motor_sw
+    });
   };
 
   return (
@@ -119,8 +145,10 @@ const Index = () => {
           <ActuatorControl
             fanStatus={controlState.fan}
             motorSpeed={controlState.motor}
+            motorSafetyOn={controlState.motor_sw} // <--- PROPERTI BARU 1
             onFanChange={handleFanChange}
             onMotorChange={handleMotorChange}
+            onMotorSafetyChange={handleSafetyChange} // <--- PROPERTI BARU 2
             disabled={status !== "connected"}
           />
           {status !== "connected" && (

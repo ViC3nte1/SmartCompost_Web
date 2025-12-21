@@ -3,13 +3,17 @@ export interface SensorData {
   hum: number;
   gas: number;
   fan: number;
-  motor: number;
+  motor?: number;
+  motor_speed?: number;
+  motor_sw?: boolean | number;
   timestamp?: Date;
 }
 
 export interface ControlCommand {
   fan: number;
-  motor: number;
+  motor?: number;
+  motor_speed?: number;
+  motor_sw?: boolean;
 }
 
 export interface MqttSettings {
