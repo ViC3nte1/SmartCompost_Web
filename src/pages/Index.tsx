@@ -46,16 +46,6 @@ const Index = () => {
     });
   };
 
-  const handleFanChange = (value: number) => {
-    const newState = { ...controlState, fan: value };
-    setControlState(newState);
-    publishControl({
-      fan: value,
-      motor_speed: newState.motor,
-      motor_sw: newState.motor_sw
-    });
-  };
-
   const handleMotorChange = (value: number) => {
     const newState = { ...controlState, motor: value };
     setControlState(newState);
@@ -117,7 +107,7 @@ const Index = () => {
             <SensorCard
               title="Gas Amonia"
               value={lastData?.gas ?? null}
-              unit="PPM"
+              unit="%"
               icon={<Wind className="w-6 h-6" />}
               type="gas"
               thresholds={settings.thresholds}
@@ -146,7 +136,6 @@ const Index = () => {
             fanStatus={controlState.fan}
             motorSpeed={controlState.motor}
             motorSafetyOn={controlState.motor_sw} // <--- PROPERTI BARU 1
-            onFanChange={handleFanChange}
             onMotorChange={handleMotorChange}
             onMotorSafetyChange={handleSafetyChange} // <--- PROPERTI BARU 2
             disabled={status !== "connected"}

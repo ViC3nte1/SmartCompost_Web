@@ -12,17 +12,31 @@ interface SensorCardProps {
 }
 
 export const SensorCard = ({ title, value, unit, icon, type, thresholds }: SensorCardProps) => {
-  const getStatus = () => {
+  
+  // --- LOGIKA STATUS (SAMA PERSIS DENGAN FLUTTER) ---
+  const getStatus = (): "safe" | "warning" | "danger" | "inactive" => {
     if (value === null) return "inactive";
     
     switch (type) {
       case "temp":
-        return value > thresholds.tempMax ? "danger" : "safe";
+        // Suhu > 65: BAHAYA (Merah)
+        if (value > 65) return "danger";
+        // Suhu > 45: WASPADA (Kuning/Orange)
+        if (value > 45) return "warning";
+        return "safe";
+
       case "gas":
-        return value > thresholds.gasMax ? "danger" : "safe";
+        // Gas > 60: BAHAYA (Merah)
+        if (value > 60) return "danger";
+        // Gas > 30: WASPADA (Kuning/Orange)
+        if (value > 30) return "warning";
+        return "safe";
+
       case "hum":
+        // Kelembapan tetap pakai thresholds karena logika Flutter sederhana
         if (value < thresholds.humMin || value > thresholds.humMax) return "warning";
         return "safe";
+
       default:
         return "safe";
     }
@@ -36,38 +50,46 @@ export const SensorCard = ({ title, value, unit, icon, type, thresholds }: Senso
       border: "border-primary/30",
       indicator: "bg-success",
       text: "text-primary",
+      progressBar: "bg-primary",
     },
     warning: {
-      bg: "from-warning/20 to-warning/5",
-      border: "border-warning/30",
-      indicator: "bg-warning",
-      text: "text-warning",
+      bg: "from-orange-100 to-orange-50 dark:from-orange-900/20 dark:to-orange-900/10", // Warna background kuning/orange lembut
+      border: "border-orange-300 dark:border-orange-700",
+      indicator: "bg-orange-500",
+      text: "text-orange-600 dark:text-orange-400",
+      progressBar: "bg-orange-500",
     },
     danger: {
       bg: "from-destructive/20 to-destructive/5",
       border: "border-destructive/30",
       indicator: "bg-destructive animate-pulse-glow",
       text: "text-destructive",
+      progressBar: "bg-destructive",
     },
     inactive: {
       bg: "from-muted to-muted/50",
       border: "border-border",
       indicator: "bg-muted-foreground",
       text: "text-muted-foreground",
+      progressBar: "bg-muted",
     },
   };
 
   const style = statusStyles[status];
 
+  // --- LOGIKA PROGRESS BAR (Persentase) ---
   const getPercentage = () => {
     if (value === null) return 0;
     switch (type) {
       case "temp":
-        return Math.min((value / 50) * 100, 100);
+        // Pembagi 80.0 (Sama dengan Flutter agar tidak cepat penuh)
+        return Math.min((value / 80) * 100, 100);
       case "gas":
-        return Math.min((value / 1000) * 100, 100);
+        // Pembagi 100.0 (Skala Gas yang wajar untuk tampilan)
+        return Math.min((value / 100) * 100, 100);
       case "hum":
-        return value;
+        // Kelembapan 0-100%
+        return Math.min(value, 100);
       default:
         return 0;
     }
@@ -82,7 +104,7 @@ export const SensorCard = ({ title, value, unit, icon, type, thresholds }: Senso
         style.border
       )}
     >
-      {/* Status Indicator */}
+      {/* Status Indicator (Titik Pojok Kanan Atas) */}
       <div className="absolute top-4 right-4">
         <div className={cn("w-3 h-3 rounded-full", style.indicator)} />
       </div>
@@ -108,7 +130,7 @@ export const SensorCard = ({ title, value, unit, icon, type, thresholds }: Senso
         <div
           className={cn(
             "h-full rounded-full transition-all duration-500",
-            status === "danger" ? "bg-destructive" : status === "warning" ? "bg-warning" : "bg-primary"
+            style.progressBar
           )}
           style={{ width: `${getPercentage()}%` }}
         />
@@ -116,8 +138,8 @@ export const SensorCard = ({ title, value, unit, icon, type, thresholds }: Senso
 
       {/* Threshold Info */}
       <p className="mt-3 text-xs text-muted-foreground">
-        {type === "temp" && `Batas: ${thresholds.tempMax}°C`}
-        {type === "gas" && `Batas: ${thresholds.gasMax} PPM`}
+        {type === "temp" && `Batas: 65°C`}
+        {type === "gas" && `Batas: 60 %`}
         {type === "hum" && `Optimal: ${thresholds.humMin}-${thresholds.humMax}%`}
       </p>
     </div>

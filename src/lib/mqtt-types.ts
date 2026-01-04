@@ -43,8 +43,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     publishTopic: "project/smart_compost/control",
   },
   thresholds: {
-    tempMax: 33,
-    gasMax: 500,
+    tempMax: 65,
+    gasMax: 60,
     humMin: 40,
     humMax: 80,
   },
